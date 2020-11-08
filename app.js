@@ -50,8 +50,6 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.use(auth);
-
 app.use('/articles', celebrate({
   headers: Joi.object().keys({
     authorization: Joi.string().required(),
@@ -63,10 +61,6 @@ app.use('/users', celebrate({
     authorization: Joi.string().required(),
   }).unknown(true),
 }), auth, users);
-
-app.all('*', () => {
-  throw NotFoundError(404, 'Запрашиваемый ресурс не найден');
-});
 
 app.use(errorLogger);
 
