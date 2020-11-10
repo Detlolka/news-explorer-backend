@@ -1,10 +1,12 @@
 const Article = require('../models/article');
-const NotFoundError = require('../utils/Errors');
+const NotFoundError = require('../Errors/NotFoundError');
+const NotValidIdError = require('../Errors/NotValidIdError');
+const ForbiddenError = require('../Errors/ForbiddenError');
 
 // Запрос всех карточек
 module.exports.getArticles = (req, res, next) => {
   Article.find({})
-    .then((articles) => res.status(200).send(articles))
+    .then((articles) => res.send(articles))
     .catch(next);
 };
 
@@ -17,28 +19,28 @@ module.exports.createArticle = (req, res, next) => {
     keyword, title, text, date, source, link, image, owner: req.user._id,
   })
     .then((article) => {
-      Article.findById(article._id).populate(['owner'])
+      Article.findById(article._id)
         .orFail(new NotFoundError(404, 'Данный id отсутствует в базе данных'))
         .then((art) => {
-          res.status(200).send(art);
+          res.send(art);
         });
-    }).catch(() => next(new NotFoundError(400, 'Невалидный Id')));
+    }).catch(() => next(new NotValidIdError(400, 'Невалидный Id')));
 };
 
 // Удаление новости
 module.exports.deleteArticle = (req, res, next) => {
   Article.findById(req.params.id)
+    .populate(['owner'])
     .orFail(new NotFoundError(404, 'Данный id отсутствует в базе данных'))
     .then((art) => {
-      if (art.owner.toString() === req.user._id.toString()) {
-        Article.findOneAndDelete({ _id: art._id })
-          .populate(['owner'])
-          .orFail(new NotFoundError(404, 'Данный id отсутствует в базе данных'))
+      if (art.owner._id.toString() === req.user._id.toString()) {
+        Article.deleteOne(art)
           .then((deletedArticle) => {
-            res.status(200).send(deletedArticle);
+            res.send(deletedArticle);
           });
       } else {
-        throw new NotFoundError(403, 'Вы пытаетесь удалить чужую новость');
+        throw new ForbiddenError(403, 'Вы пытаетесь удалить чужую новость');
       }
-    }).catch(next);
+    })
+    .catch(next);
 };

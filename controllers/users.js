@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const NotFoundError = require('../utils/Errors');
+const NotFoundError = require('../Errors/NotFoundError');
+const NotValidIdError = require('../Errors/NotValidIdError');
+const ConflictRequestError = require('../Errors/ConflictRequestError');
 
 const { JWT_SECRET, NODE_ENV } = process.env;
 
@@ -18,12 +20,12 @@ module.exports.createUser = (req, res, next) => {
   const { email, password, name } = req.body;
   bcrypt.hash(password, 10).then((hashPass) => {
     User.create({ password: hashPass, email, name })
-      .then((user) => res.status(200).send({ _id: user._id }))
+      .then((user) => res.send({ _id: user._id }))
       .catch((error) => {
         if (error.code === 11000) {
-          next(new NotFoundError(409, 'Пользователь с данным email уже зарегистрирован'));
+          next(new ConflictRequestError(409, 'Пользователь с данным email уже зарегистрирован'));
         } else {
-          next(new NotFoundError(400, error.message));
+          next(new NotValidIdError(400, error.message));
         }
       });
   });

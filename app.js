@@ -2,15 +2,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
+const { limiter } = require('./middlewares/rateLimiter');
 const users = require('./routes/users');
 const articles = require('./routes/articles');
 const auth = require('./middlewares/auth');
+const { URL_DB } = require('./utils/urlDB');
 require('dotenv').config();
-const NotFoundError = require('./utils/Errors');
+const NotFoundError = require('./Errors/NotFoundError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
@@ -20,15 +21,10 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://localhost:27017/mydb', {
+mongoose.connect(URL_DB, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
-});
-
-const limiter = rateLimit({
-  windowsMs: 60 * 60 * 1000,
-  max: 500,
 });
 
 app.use(limiter);
@@ -38,13 +34,13 @@ app.use(requestLogger);
 app.post('/signin', celebrate({
   body: Joi.object().keys({
     password: Joi.string().required().min(3),
-    email: Joi.string().required().min(3),
+    email: Joi.string().required().min(3).email(),
   }),
 }), login);
 
 app.post('/signup', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(3),
+    email: Joi.string().required().min(3).email(),
     password: Joi.string().required().min(3),
     name: Joi.string().required().min(3),
   }),
@@ -65,7 +61,7 @@ app.use('/users', celebrate({
 }), auth, users);
 
 app.all('*', () => {
-  throw NotFoundError(404, 'Запрашиваемый ресурс не найден');
+  throw new NotFoundError(404, 'Запрашиваемый ресурс не найден');
 });
 
 app.use(errorLogger);
