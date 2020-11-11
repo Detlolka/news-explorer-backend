@@ -13,4 +13,4 @@ Backend-code: https://github.com/Detlolka/news-explorer-backend/,
 
 Project-backend:  http://api.a-diploma.students.nomoreparties.co/
 
-Public IP: http://84.201.161.93/
+Public IP: http://130.193.42.106/
