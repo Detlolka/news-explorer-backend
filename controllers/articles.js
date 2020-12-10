@@ -5,7 +5,7 @@ const ForbiddenError = require('../Errors/ForbiddenError');
 
 // Запрос всех карточек
 module.exports.getArticles = (req, res, next) => {
-  Article.find({})
+  Article.find({ owner: req.user._id })
     .then((articles) => res.send(articles))
     .catch(next);
 };

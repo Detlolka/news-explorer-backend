@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const validateUrl = /^(https?:\/\/(www\.)?)[\w-]+\.[\w./():,-]+#?$/;
+const validateImage = /^((http|https):\/\/)(www\.)?([\w\W\d]{1,})(\.)([a-zA-Z]{1,10})([\w\W\d]{1,})?$/;
+const validateLink = /^((http|https):\/\/)(www\.)?([\w\W\d]{1,})(\.)([a-zA-Z]{1,10})([\w\W\d]{1,})?$/;
 
 const articleSchema = new mongoose.Schema({
   keyword: {
@@ -28,7 +29,7 @@ const articleSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(v) {
-        return validateUrl.test(v);
+        return validateLink.test(v);
       },
       message: 'Введите корректную ссылку на статью',
     },
@@ -38,7 +39,7 @@ const articleSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(v) {
-        return validateUrl.test(v);
+        return validateImage.test(v);
       },
       message: 'Введите корректную ссылку на иллюстрация',
     },
