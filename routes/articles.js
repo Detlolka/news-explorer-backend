@@ -1,7 +1,14 @@
 const router = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
-
+const { celebrate, Joi, CelebrateError } = require('celebrate');
+const validator = require('validator');
 const { getArticles, createArticle, deleteArticle } = require('../controllers/articles');
+
+const validatorLink = (value) => {
+  if (!validator.isURL(value)) {
+    throw new CelebrateError('Ссылка не валидна');
+  }
+  return value;
+};
 
 // Запрос всех сохраненных статей
 router.get('/', getArticles);
@@ -14,8 +21,8 @@ router.post('/', celebrate({
     text: Joi.string().required(),
     date: Joi.string().required(),
     source: Joi.string().required(),
-    link: Joi.string().required().pattern(/^(https?:\/\/(www\.)?)[\w-]+\.[\w./():,-]+#?$/),
-    image: Joi.string().required().pattern(/^(https?:\/\/(www\.)?)[\w-]+\.[\w./():,-]+#?$/),
+    link: Joi.string().custom(validatorLink).required(),
+    image: Joi.string().custom(validatorLink).required(),
   }),
 }), createArticle);
 
